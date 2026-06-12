@@ -1,0 +1,141 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}KYC Document Verification - Antigravity Bank{% endblock %}
+{% block header_title %}KYC Document Verification{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- KYC Submission Box / Alert -->
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Verification Status</h5>
+            <hr class="text-muted">
+
+            <div class="text-center py-3">
+                <span class="badge fs-5 px-4 py-2 rounded-pill {% if kyc.kyc_status == 'APPROVED' %}bg-success{% elif kyc.kyc_status == 'REJECTED' %}bg-danger{% elif kyc.kyc_status == 'SUBMITTED' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                    {{ kyc.kyc_status }}
+                </span>
+                
+                {% if kyc.kyc_status == 'APPROVED' %}
+                <div class="text-success mt-3 small">
+                    <i class="bi bi-check-circle-fill"></i> Your identity has been verified. You now have full banking access!
+                </div>
+                {% elif kyc.kyc_status == 'SUBMITTED' %}
+                <div class="text-warning mt-3 small">
+                    <i class="bi bi-hourglass-split"></i> Under review by our administration. We will verify your credentials shortly.
+                </div>
+                {% elif kyc.kyc_status == 'REJECTED' %}
+                <div class="alert alert-danger mt-3 text-start small border-0" role="alert">
+                    <h6 class="fw-bold"><i class="bi bi-x-circle-fill me-1"></i> KYC Verification Rejected</h6>
+                    <strong>Reason/Comments:</strong><br>
+                    {{ kyc.kyc_comments or "No comments provided." }}
+                    <hr class="my-2">
+                    <p class="mb-0">Please start over by uploading correct documents below. Your previous documents will be automatically cleared upon your first upload.</p>
+                </div>
+                {% else %}
+                <div class="text-muted mt-3 small">
+                    <i class="bi bi-info-circle"></i> Please upload at least one valid identity document and click "Finalize Submission" below.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Finalize Submission -->
+            {% if kyc.kyc_status in ['DRAFT', 'REJECTED'] %}
+            <form action="/kyc/submit" method="POST" class="mt-3">
+                <button type="submit" class="btn btn-accent-grad w-100 py-2.5 {% if not kyc.documents %}disabled{% endif %}">
+                    <i class="bi bi-send me-1"></i> Finalize & Submit KYC
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- File Upload Form -->
+        {% if kyc.kyc_status in ['DRAFT', 'REJECTED', 'SUBMITTED'] %}
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-cloud-arrow-up text-primary me-2"></i>Upload Identity Document</h5>
+            <hr class="text-muted">
+
+            <form action="/kyc/upload" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="document_type" class="form-label fw-semibold">Document Type</label>
+                    <select class="form-select" id="document_type" name="document_type" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="AADHAAR">Aadhaar Card</option>
+                        <option value="PAN">PAN Card</option>
+                        <option value="PASSPORT">Passport</option>
+                        <option value="DRIVING_LICENSE">Driving License</option>
+                    </select>
+                    <div class="invalid-feedback">Please choose a document type.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="file" class="form-label fw-semibold">Document File (PDF, PNG, JPG, JPEG)</label>
+                    <input type="file" class="form-control" id="file" name="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                    <div class="invalid-feedback">Please choose an identity file.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary-grad w-100 py-2.5">
+                    <i class="bi bi-upload me-1"></i> Upload Document
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Uploaded Documents List -->
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-files text-primary me-2"></i>Uploaded Documents Log</h5>
+            <hr class="text-muted">
+
+            {% if kyc.documents %}
+            <div class="table-responsive">
+                <table class="table align-middle custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Document Type</th>
+                            <th>Status</th>
+                            <th>Storage</th>
+                            <th>Upload Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in kyc.documents %}
+                        <tr>
+                            <td class="fw-semibold">
+                                <i class="bi bi-file-earmark-check text-primary me-2"></i>{{ doc.document_type }}
+                            </td>
+                            <td>
+                                <span class="badge badge-premium {% if doc.status == 'APPROVED' %}bg-success{% elif doc.status == 'REJECTED' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ doc.status }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                {% if doc.document_url.startswith('https://') %}
+                                <span class="badge bg-success">Blob</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Local</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ doc.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ doc.document_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-files fs-1 text-muted d-block mb-3"></i>
+                <p class="text-muted">No document files uploaded yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

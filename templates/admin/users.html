@@ -1,0 +1,78 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Manage Users - Antigravity Bank{% endblock %}
+{% block header_title %}User Administration Console{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-people text-primary me-2"></i>System User Directory</h5>
+        <span class="text-muted small">Total users loaded: {{ users|length }}</span>
+    </div>
+    <hr class="text-muted">
+
+    <!-- Search input -->
+    <div class="mb-3 input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control table-search" data-target="user-table" placeholder="Search users by name, email, role...">
+    </div>
+
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table align-middle custom-table mb-0" id="user-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Email Address</th>
+                    <th>Mobile</th>
+                    <th>Role</th>
+                    <th>KYC Status</th>
+                    <th>System Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td class="fw-bold">{{ u.full_name }}</td>
+                    <td class="small text-muted">{{ u.email }}</td>
+                    <td class="small">{{ u.mobile_number or "N/A" }}</td>
+                    <td>
+                        <span class="badge {% if u.role == 'ADMIN' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %} badge-premium">
+                            {{ u.role }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if u.kyc_status == 'APPROVED' %}bg-success{% elif u.kyc_status == 'REJECTED' %}bg-danger{% elif u.kyc_status == 'SUBMITTED' %}bg-warning text-dark{% else %}bg-secondary{% endif %} badge-premium">
+                            {{ u.kyc_status }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if u.is_active %}bg-light text-success{% else %}bg-light text-danger{% endif %} badge-premium">
+                            {% if u.is_active %}Active{% else %}Deactivated{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if u.id != user.id %}
+                        <form action="/admin/users/{{ u.id }}/toggle-active" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-3 py-1">
+                                {% if u.is_active %}Block{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small italic">Self (Admin)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-people fs-1 d-block mb-3"></i>
+        <p>No registered users found in the system.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

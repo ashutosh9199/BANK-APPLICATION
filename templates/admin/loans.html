@@ -1,0 +1,95 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Manage Loans - Antigravity Bank{% endblock %}
+{% block header_title %}Credit Portfolios Administration{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-bank text-primary me-2"></i>Global Credit Directory</h5>
+        <span class="text-muted small">Total applications: {{ loans|length }}</span>
+    </div>
+    <hr class="text-muted">
+
+    <!-- Search input -->
+    <div class="mb-3 input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control table-search" data-target="loans-table" placeholder="Search loans by type, customer, status...">
+    </div>
+
+    {% if loans %}
+    <div class="table-responsive">
+        <table class="table align-middle custom-table mb-0" id="loans-table">
+            <thead>
+                <tr>
+                    <th>Loan Type</th>
+                    <th>Customer Name</th>
+                    <th>Principal</th>
+                    <th>EMI Amount</th>
+                    <th>Outstanding Debt</th>
+                    <th>Loan Status</th>
+                    <th>Attachments</th>
+                    <th>Lifecycle Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ln in loans %}
+                <tr>
+                    <td class="fw-bold"><i class="bi bi-bank text-primary me-2"></i>{{ ln.loan_type }}</td>
+                    <td class="small">{{ ln.user.full_name }}</td>
+                    <td class="fw-semibold">${{ "%.2f"|format(ln.principal_amount) }}</td>
+                    <td>${{ "%.2f"|format(ln.emi_amount) }}</td>
+                    <td class="text-danger fw-bold">${{ "%.2f"|format(ln.outstanding_balance) }}</td>
+                    <td>
+                        <span class="badge badge-premium {% if ln.status == 'ACTIVE' %}bg-success{% elif ln.status == 'PENDING' %}bg-warning text-dark{% elif ln.status == 'COMPLETED' %}bg-secondary{% else %}bg-danger{% endif %}">
+                            {{ ln.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if ln.documents %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Docs ({{ ln.documents|length }})
+                            </button>
+                            <ul class="dropdown-menu shadow">
+                                {% for d in ln.documents %}
+                                <li><a class="dropdown-item small" href="{{ d.document_url }}" target="_blank"><i class="bi bi-file-earmark-check me-1"></i>{{ d.document_name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}
+                        <span class="text-muted small">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if ln.status == 'PENDING' %}
+                        <form action="/admin/loans/{{ ln.id }}/review" method="POST" class="needs-validation" novalidate>
+                            <div class="input-group input-group-sm mb-1">
+                                <select class="form-select form-select-sm" name="status" required>
+                                    <option value="" disabled selected>Verdict</option>
+                                    <option value="APPROVED">APPROVE</option>
+                                    <option value="REJECTED">REJECT</option>
+                                </select>
+                            </div>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" name="comments" placeholder="Comments...">
+                                <button type="submit" class="btn btn-sm btn-primary-grad">Submit</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <span class="text-muted small italic">Processed ({{ ln.status }})</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-bank fs-1 d-block mb-3"></i>
+        <p>No credit portfolio applications filed yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,3 @@
+CMD-LOG-LINE-BEGIN 34760 | 2026-06-09 14:49:40,395 | INFO | az_command_data_logger | command args: webapp log config --name {} --resource-group {} --application-logging {} --web-server-logging {} --level {}
+CMD-LOG-LINE-BEGIN 34760 | 2026-06-09 14:49:41,462 | ERROR | az_command_data_logger | Please run 'az login' to setup account.
+CMD-LOG-LINE-BEGIN 34760 | 2026-06-09 14:49:41,462 | INFO | az_command_data_logger | exit code: 1

@@ -1,0 +1,77 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Manage Accounts - Antigravity Bank{% endblock %}
+{% block header_title %}Accounts Administration{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-wallet2 text-primary me-2"></i>Global Accounts Directory</h5>
+        <span class="text-muted small">Total accounts: {{ accounts|length }}</span>
+    </div>
+    <hr class="text-muted">
+
+    <!-- Search input -->
+    <div class="mb-3 input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control table-search" data-target="accounts-table" placeholder="Search accounts by number, type, status...">
+    </div>
+
+    {% if accounts %}
+    <div class="table-responsive">
+        <table class="table align-middle custom-table mb-0" id="accounts-table">
+            <thead>
+                <tr>
+                    <th>Account Number</th>
+                    <th>Customer Name</th>
+                    <th>Account Type</th>
+                    <th>Current Balance</th>
+                    <th>Account Status</th>
+                    <th>Lifecycle Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in accounts %}
+                <tr>
+                    <td class="fw-bold"><i class="bi bi-wallet2 text-primary me-2"></i>{{ acc.account_number }}</td>
+                    <td class="small">{{ acc.user.full_name }}</td>
+                    <td class="small">{{ acc.account_type }}</td>
+                    <td class="fw-bold">${{ "%.2f"|format(acc.balance) }}</td>
+                    <td>
+                        <span class="badge badge-premium {% if acc.status == 'ACTIVE' %}bg-success{% elif acc.status == 'FROZEN' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ acc.status }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if acc.status != 'CLOSED' %}
+                        <form action="/admin/accounts/{{ acc.id }}/status" method="POST" class="d-inline needs-validation" novalidate>
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" name="account_status" required>
+                                    <option value="" disabled selected>Verdict</option>
+                                    {% if acc.status == 'ACTIVE' %}
+                                    <option value="FROZEN">FREEZE</option>
+                                    {% elif acc.status == 'FROZEN' %}
+                                    <option value="ACTIVE">UNFREEZE</option>
+                                    {% endif %}
+                                    <option value="CLOSED">CLOSE</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary-grad">Submit</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <span class="text-danger small italic"><i class="bi bi-x-octagon"></i> Permanently Closed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-wallet2 fs-1 d-block mb-3"></i>
+        <p>No bank accounts open yet in the system.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

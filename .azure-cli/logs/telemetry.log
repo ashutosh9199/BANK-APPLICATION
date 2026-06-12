@@ -1,0 +1,24 @@
+15008 : 2026-06-09 14:49:43,548 : INFO : telemetry.main : Attempt start. Configuration directory [C:\Users\307380\banking-application\.azure-cli]. Cache directory [C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941744].
+15008 : 2026-06-09 14:49:43,549 : INFO : telemetry.records : 1 cache files to upload.
+15008 : 2026-06-09 14:49:43,551 : INFO : telemetry.records : Processed file C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941744\cache into 1 records.
+15008 : 2026-06-09 14:49:43,563 : INFO : telemetry.records : Remove directory C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941744
+irectory [C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941762].
+10760 : 2026-06-09 14:49:43,565 : INFO : telemetry.records : 1 cache files to upload.
+10760 : 2026-06-09 14:49:43,567 : INFO : telemetry.records : Processed file C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941762\cache into 1 records.
+10760 : 2026-06-09 14:49:43,573 : INFO : telemetry.records : Remove directory C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941762
+36360 : 2026-06-09 14:49:43,575 : INFO : telemetry.main : Attempt start. Configuration directory [C:\Users\307380\banking-application\.azure-cli]. Cache directory [C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941755].
+36360 : 2026-06-09 14:49:43,577 : INFO : telemetry.records : 1 cache files to upload.
+36360 : 2026-06-09 14:49:43,580 : INFO : telemetry.records : Processed file C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941755\cache into 1 records.
+36360 : 2026-06-09 14:49:43,585 : INFO : telemetry.records : Remove directory C:\Users\307380\banking-application\.azure-cli\telemetry\20260609144941755
+15008 : 2026-06-09 14:49:44,107 : INFO : telemetry.client : Accumulated 1 events. Flush the clients.
+15008 : 2026-06-09 14:49:44,108 : INFO : telemetry.client : Flush client c4395b75-49cc-422c-bc95-c7d51aef5d46.
+36360 : 2026-06-09 14:49:44,126 : INFO : telemetry.client : Accumulated 1 events. Flush the clients.
+36360 : 2026-06-09 14:49:44,127 : INFO : telemetry.client : Flush client c4395b75-49cc-422c-bc95-c7d51aef5d46.
+10760 : 2026-06-09 14:49:44,132 : INFO : telemetry.client : Accumulated 1 events. Flush the clients.
+10760 : 2026-06-09 14:49:44,132 : INFO : telemetry.client : Flush client c4395b75-49cc-422c-bc95-c7d51aef5d46.
+15008 : 2026-06-09 14:49:46,277 : ERROR : telemetry.sender : Upload failed. OSError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+15008 : 2026-06-09 14:49:46,278 : INFO : telemetry.sender : Finish uploading in 2.169224 seconds.
+36360 : 2026-06-09 14:49:46,337 : ERROR : telemetry.sender : Upload failed. OSError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+36360 : 2026-06-09 14:49:46,337 : INFO : telemetry.sender : Finish uploading in 2.209851 seconds.
+10760 : 2026-06-09 14:49:46,353 : ERROR : telemetry.sender : Upload failed. OSError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>
+10760 : 2026-06-09 14:49:46,353 : INFO : telemetry.sender : Finish uploading in 2.220379 seconds.

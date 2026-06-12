@@ -1,0 +1,105 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Account Statements - Antigravity Bank{% endblock %}
+{% block header_title %}Download Account Statements{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Selection Pane -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i>Select Bank Account</h5>
+            <hr class="text-muted">
+
+            {% if accounts %}
+            <form action="/statements" method="GET" id="statementSelectForm" class="mb-4">
+                <div class="mb-3">
+                    <label for="account_select" class="form-label fw-semibold">Active Accounts</label>
+                    <select class="form-select" id="account_select" name="account_id" onchange="this.form.submit()">
+                        {% for acc in accounts %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>
+                            {{ acc.account_type }} - {{ acc.account_number }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+
+                {% if selected_account %}
+                <div class="card bg-light border-0 p-3 mb-4 rounded-3 text-center">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Current Account Balance</span>
+                    <h3 class="fw-bold text-dark mb-0">${{ "%.2f"|format(selected_account.balance) }}</h3>
+                </div>
+                
+                <!-- Download Button -->
+                <form action="/statements/{{ selected_account.id }}/download" method="POST">
+                    <button type="submit" class="btn btn-primary-grad w-100 py-2.5">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i> Generate & Download Full Statement
+                    </button>
+                </form>
+                <small class="text-muted text-center d-block mt-2"><i class="bi bi-shield-check text-success"></i> Uploaded and stored in Azure Blob Storage GRS</small>
+                {% endif %}
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-exclamation-triangle fs-2 text-warning d-block mb-2"></i>
+                <p class="small">Open a bank account to generate statements.</p>
+                <a href="/accounts" class="btn btn-sm btn-outline-primary rounded-pill">Accounts</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Mini Statement Table -->
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Recent Activity (Mini Statement)</h5>
+            <hr class="text-muted">
+
+            {% if selected_account %}
+                <div class="table-responsive">
+                    <table class="table align-middle custom-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Transaction Type</th>
+                                <th>Amount Settled</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if transactions %}
+                                {% for tx in transactions %}
+                                <tr>
+                                    <td>
+                                        <span class="badge {% if tx.transaction_type == 'DEPOSIT' %}bg-success-subtle text-success{% elif tx.transaction_type == 'WITHDRAW' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %} badge-premium">
+                                            {{ tx.transaction_type }}
+                                        </span>
+                                        <small class="text-muted d-block mt-1">{{ tx.description }}</small>
+                                    </td>
+                                    <td class="fw-bold">
+                                        {% if tx.transaction_type == 'WITHDRAW' or (tx.transaction_type == 'TRANSFER' and tx.source_account_number == selected_account.account_number) %}
+                                            <span class="text-danger">-${{ "%.2f"|format(tx.amount) }}</span>
+                                        {% else %}
+                                            <span class="text-success">+${{ "%.2f"|format(tx.amount) }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small text-muted">{{ tx.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">No transactions registered.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-file-text fs-1 d-block mb-3"></i>
+                <p>Select a bank account on the left to review recent statements.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

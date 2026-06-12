@@ -1,0 +1,144 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Antigravity Bank{% endblock %}
+{% block header_title %}Customer Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Summary Cards -->
+<div class="row g-4 mb-4">
+    <!-- Total Balance Card -->
+    <div class="col-md-4">
+        <div class="card bank-card dark p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-white-50 fw-semibold text-uppercase small">Total Liquid Balance</span>
+                <i class="bi bi-wallet2 text-success fs-4"></i>
+            </div>
+            <h2 class="fw-bold mb-1">${{ "%.2f"|format(total_balance) }}</h2>
+            <p class="text-success small mb-0"><i class="bi bi-arrow-up-right me-1"></i>Combined from all accounts</p>
+        </div>
+    </div>
+    
+    <!-- KYC Status Card -->
+    <div class="col-md-4">
+        <div class="card bank-card {% if kyc_status == 'APPROVED' %}accent{% elif kyc_status == 'REJECTED' %}warning{% else %}primary{% endif %} p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-semibold text-uppercase small">KYC Verification</span>
+                <i class="bi bi-shield-check {% if kyc_status == 'APPROVED' %}text-success{% elif kyc_status == 'REJECTED' %}text-danger{% else %}text-primary{% endif %} fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">
+                <span class="badge {% if kyc_status == 'APPROVED' %}bg-success{% elif kyc_status == 'REJECTED' %}bg-danger{% elif kyc_status == 'SUBMITTED' %}bg-warning{% else %}bg-secondary{% endif %}">
+                    {{ kyc_status }}
+                </span>
+            </h3>
+            {% if kyc_status == 'APPROVED' %}
+            <p class="text-success small mb-0"><i class="bi bi-check-circle me-1"></i>Full banking access enabled</p>
+            {% else %}
+            <p class="text-muted small mb-0"><a href="/kyc" class="text-decoration-none fw-semibold">Complete verification <i class="bi bi-arrow-right"></i></a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Active Loans Card -->
+    <div class="col-md-4">
+        <div class="card bank-card warning p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted fw-semibold text-uppercase small">Active Loan Debt</span>
+                <i class="bi bi-bank text-warning fs-4"></i>
+            </div>
+            <h2 class="fw-bold mb-1">${{ "%.2f"|format(total_loan_debt) }}</h2>
+            <p class="text-warning small mb-0"><i class="bi bi-info-circle me-1"></i>Total outstanding principal</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Accounts Overview -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-wallet2 text-primary me-2"></i>My Accounts</h5>
+                <a href="/accounts" class="btn btn-sm btn-outline-primary rounded-pill px-3">Manage</a>
+            </div>
+            
+            {% if accounts %}
+            <div class="list-group list-group-flush">
+                {% for acc in accounts %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ acc.account_type }} Account</h6>
+                        <small class="text-muted">No. {{ acc.account_number }}</small>
+                        <span class="badge {% if acc.status == 'ACTIVE' %}bg-light text-success{% else %}bg-light text-warning{% endif %} ms-2 small">
+                            {{ acc.status }}
+                        </span>
+                    </div>
+                    <div class="text-end">
+                        <span class="fw-bold fs-5 d-block">${{ "%.2f"|format(acc.balance) }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-wallet2 fs-1 text-muted d-block mb-2"></i>
+                <p class="text-muted">No active bank accounts found.</p>
+                {% if kyc_status == 'APPROVED' %}
+                <a href="/accounts" class="btn btn-primary-grad rounded-pill px-4">Create Account</a>
+                {% else %}
+                <span class="text-danger small"><i class="bi bi-info-circle"></i> Requires Approved KYC to create</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-arrow-left-right text-primary me-2"></i>Recent Activity</h5>
+                <a href="/transactions" class="btn btn-sm btn-outline-primary rounded-pill px-3">History</a>
+            </div>
+            
+            {% if transactions %}
+            <div class="table-responsive">
+                <table class="table align-middle custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr>
+                            <td>
+                                <span class="badge {% if tx.transaction_type == 'DEPOSIT' %}bg-success-subtle text-success{% elif tx.transaction_type == 'WITHDRAW' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %} badge-premium">
+                                    {{ tx.transaction_type }}
+                                </span>
+                                <small class="text-muted d-block mt-1">{{ tx.description }}</small>
+                            </td>
+                            <td class="fw-bold">
+                                {% if tx.transaction_type == 'WITHDRAW' or (tx.transaction_type == 'TRANSFER' and tx.source_account_number) %}
+                                    <span class="text-danger">-${{ "%.2f"|format(tx.amount) }}</span>
+                                {% else %}
+                                    <span class="text-success">+${{ "%.2f"|format(tx.amount) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ tx.created_at.strftime('%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-journal-text fs-1 text-muted d-block mb-2"></i>
+                <p class="text-muted">No transactions recorded yet.</p>
+                <a href="/transactions" class="btn btn-primary-grad rounded-pill px-4">Perform Transaction</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Admin Dashboard - Antigravity Bank{% endblock %}
+{% block header_title %}Bank Management Console{% endblock %}
+
+{% block content %}
+<!-- Administrative Stat Grid -->
+<div class="row g-4 mb-4">
+    <!-- Combined liquid deposits -->
+    <div class="col-md-3">
+        <div class="card bank-card dark p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-white-50 fw-semibold text-uppercase small">Total Bank Deposits</span>
+                <i class="bi bi-wallet2 text-success fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">${{ "%.2f"|format(total_deposits) }}</h3>
+            <p class="text-success small mb-0"><i class="bi bi-graph-up me-1"></i>Combined customer funds</p>
+        </div>
+    </div>
+
+    <!-- Outstanding credit debt -->
+    <div class="col-md-3">
+        <div class="card bank-card warning p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted fw-semibold text-uppercase small">Loan Portfolio Size</span>
+                <i class="bi bi-bank text-warning fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">${{ "%.2f"|format(total_loan_portfolio) }}</h3>
+            <p class="text-warning small mb-0"><i class="bi bi-info-circle me-1"></i>Combined outstanding principal</p>
+        </div>
+    </div>
+
+    <!-- Pending KYC verification requests -->
+    <div class="col-md-3">
+        <div class="card bank-card accent p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted fw-semibold text-uppercase small">Pending KYC Actions</span>
+                <i class="bi bi-shield-exclamation text-primary fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ pending_kyc_count }} Requests</h3>
+            <p class="text-primary small mb-0"><a href="/admin/kyc-reviews" class="text-decoration-none fw-semibold">Review Queue <i class="bi bi-arrow-right"></i></a></p>
+        </div>
+    </div>
+
+    <!-- Registered users -->
+    <div class="col-md-3">
+        <div class="card bank-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted fw-semibold text-uppercase small">Registered Customers</span>
+                <i class="bi bi-people text-secondary fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">{{ total_users }} Active</h3>
+            <p class="text-muted small mb-0"><a href="/admin/users" class="text-decoration-none fw-semibold">Manage Users <i class="bi bi-arrow-right"></i></a></p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Quick User Actions list -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-people text-primary me-2"></i>Customers Log</h5>
+                <a href="/admin/users" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+            </div>
+            <hr class="text-muted">
+
+            {% if users %}
+            <div class="list-group list-group-flush">
+                {% for u in users[:5] %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 bg-transparent">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ u.full_name }}</h6>
+                        <small class="text-muted">{{ u.email }}</small>
+                        <span class="badge {% if u.is_active %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} ms-2 small">
+                            {% if u.is_active %}Active{% else %}Deactivated{% endif %}
+                        </span>
+                    </div>
+                    <span class="small text-muted">Registered {{ u.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No customers registered yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Loans list -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-bank text-primary me-2"></i>Credit Applications Review</h5>
+                <a href="/admin/loans" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All</a>
+            </div>
+            <hr class="text-muted">
+
+            {% if loans %}
+            <div class="list-group list-group-flush">
+                {% for ln in loans[:5] %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 bg-transparent">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ ln.loan_type }} Loan</h6>
+                        <small class="text-muted">Principal: ${{ "%.2f"|format(ln.principal_amount) }}</small>
+                        <span class="badge {% if ln.status == 'ACTIVE' %}bg-success{% elif ln.status == 'PENDING' %}bg-warning text-dark{% else %}bg-danger{% endif %} badge-premium ms-2 small">
+                            {{ ln.status }}
+                        </span>
+                    </div>
+                    <span class="small text-muted">{{ ln.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No credit applications filed.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

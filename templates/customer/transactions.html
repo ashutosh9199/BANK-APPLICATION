@@ -1,0 +1,196 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Transactions - Antigravity Bank{% endblock %}
+{% block header_title %}Transactions Ledger{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Action Forms Card -->
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-arrow-left-right text-primary me-2"></i>New Transaction</h5>
+            <hr class="text-muted">
+
+            {% if accounts %}
+            <!-- Bootstrap Tab pills for actions -->
+            <ul class="nav nav-pills nav-fill mb-4" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-deposit-tab" data-bs-toggle="pill" data-bs-target="#pills-deposit" type="button" role="tab">Deposit</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-withdraw-tab" data-bs-toggle="pill" data-bs-target="#pills-withdraw" type="button" role="tab">Withdraw</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-transfer-tab" data-bs-toggle="pill" data-bs-target="#pills-transfer" type="button" role="tab">Transfer</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pills-tabContent">
+                <!-- Deposit Form -->
+                <div class="tab-pane fade show active" id="pills-deposit" role="tabpanel">
+                    <form action="/transactions/deposit" method="POST" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="dep_account" class="form-label fw-semibold">Destination Account</label>
+                            <select class="form-select" id="dep_account" name="account_id" required>
+                                {% for acc in accounts %}
+                                <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>
+                                    {{ acc.account_type }} - {{ acc.account_number }} (${{ "%.2f"|format(acc.balance) }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dep_amount" class="form-label fw-semibold">Deposit Amount ($)</label>
+                            <input type="number" class="form-control" id="dep_amount" name="amount" step="0.01" min="0.01" required>
+                            <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="dep_desc" class="form-label fw-semibold">Description</label>
+                            <input type="text" class="form-control" id="dep_desc" name="description" placeholder="Self Deposit">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-2">Deposit Funds</button>
+                    </form>
+                </div>
+
+                <!-- Withdraw Form -->
+                <div class="tab-pane fade" id="pills-withdraw" role="tabpanel">
+                    <form action="/transactions/withdraw" method="POST" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="with_account" class="form-label fw-semibold">Source Account</label>
+                            <select class="form-select" id="with_account" name="account_id" required>
+                                {% for acc in accounts %}
+                                <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>
+                                    {{ acc.account_type }} - {{ acc.account_number }} (${{ "%.2f"|format(acc.balance) }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="with_amount" class="form-label fw-semibold">Withdrawal Amount ($)</label>
+                            <input type="number" class="form-control" id="with_amount" name="amount" step="0.01" min="0.01" required>
+                            <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="with_desc" class="form-label fw-semibold">Description</label>
+                            <input type="text" class="form-control" id="with_desc" name="description" placeholder="Cash Withdrawal">
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100 py-2">Withdraw Funds</button>
+                    </form>
+                </div>
+
+                <!-- Transfer Form -->
+                <div class="tab-pane fade" id="pills-transfer" role="tabpanel">
+                    <form action="/transactions/transfer" method="POST" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="tr_source" class="form-label fw-semibold">Source Account</label>
+                            <select class="form-select" id="tr_source" name="source_account_id" required>
+                                {% for acc in accounts %}
+                                <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>
+                                    {{ acc.account_type }} - {{ acc.account_number }} (${{ "%.2f"|format(acc.balance) }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tr_dest" class="form-label fw-semibold">Destination Account Number</label>
+                            <input type="text" class="form-control" id="tr_dest" name="destination_account_number" placeholder="10-digit number" pattern="^[0-9]{10}$" required>
+                            <div class="invalid-feedback">Please enter a valid 10-digit account number.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tr_amount" class="form-label fw-semibold">Transfer Amount ($)</label>
+                            <input type="number" class="form-control" id="tr_amount" name="amount" step="0.01" min="0.01" required>
+                            <div class="invalid-feedback">Please enter a valid amount greater than 0.</div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="tr_desc" class="form-label fw-semibold">Description</label>
+                            <input type="text" class="form-control" id="tr_desc" name="description" placeholder="Online Transfer">
+                        </div>
+                        <button type="submit" class="btn btn-primary-grad w-100 py-2">Transfer Funds</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-exclamation-triangle fs-2 text-warning d-block mb-2"></i>
+                <p class="small">Open an active account first before attempting transactions.</p>
+                <a href="/accounts" class="btn btn-sm btn-outline-primary rounded-pill">My Accounts</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- History list Card -->
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-clock-history text-primary me-2"></i>Ledger History</h5>
+                
+                <!-- Account Selector -->
+                {% if accounts %}
+                <form action="/transactions" method="GET" id="accountFilterForm">
+                    <select class="form-select form-select-sm rounded-pill" name="account_id" onchange="this.form.submit()">
+                        {% for acc in accounts %}
+                        <option value="{{ acc.id }}" {% if selected_account and selected_account.id == acc.id %}selected{% endif %}>
+                            {{ acc.account_number }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+            </div>
+            <hr class="text-muted">
+
+            <!-- Search Field -->
+            {% if selected_account %}
+            <div class="mb-3 input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control table-search" data-target="transaction-table" placeholder="Search transactions description...">
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table align-middle custom-table mb-0" id="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if transactions %}
+                            {% for tx in transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if tx.transaction_type == 'DEPOSIT' %}bg-success-subtle text-success{% elif tx.transaction_type == 'WITHDRAW' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %} badge-premium">
+                                        {{ tx.transaction_type }}
+                                    </span>
+                                    <small class="text-muted d-block mt-1">{{ tx.description }}</small>
+                                </td>
+                                <td class="fw-bold">
+                                    {% if tx.transaction_type == 'WITHDRAW' or (tx.transaction_type == 'TRANSFER' and tx.source_account_number == selected_account.account_number) %}
+                                        <span class="text-danger">-${{ "%.2f"|format(tx.amount) }}</span>
+                                    {% else %}
+                                        <span class="text-success">+${{ "%.2f"|format(tx.amount) }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No transactions found for this account.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-clock-history fs-1 d-block mb-3"></i>
+                <p>Please open a bank account to review ledger histories.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+
+subscription_id = "08bcc42c-4f60-4c50-9dfe-a85dc9174882"
+
+project_name  = "banking"
+environment   = "dev"
+unique_suffix = "ci001"
+location      = "Central India"
+
+
+app_service_integration_subnet_cidr = "10.0.2.0/24"
+
+
+app_gateway_public_ip_dns_label = "banking-dev-agw-ci001"
+
+
+app_service_plan_sku = "S1"
+
+
+servicebus_premium_messaging_partitions = 1
+
+
+postgresql_administrator_password = "Chandana123"
+app_secret_key                    = "replace-with-a-long-random-app-secret-key"
+app_refresh_secret_key            = "replace-with-a-long-random-refresh-secret-key"
+
+
+create_key_vault_secrets                = false
+use_key_vault_secret_references         = false
+key_vault_public_network_access_enabled = false
+
+
+tags = {
+  owner      = "student"
+  costcenter = "final-review"
+}

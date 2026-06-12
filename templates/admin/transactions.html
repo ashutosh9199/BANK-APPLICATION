@@ -1,0 +1,74 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Global Ledger - Antigravity Bank{% endblock %}
+{% block header_title %}Global Transaction Ledger{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm rounded-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-clock-history text-primary me-2"></i>Global Bank Ledger</h5>
+        <span class="text-muted small">Total ledger records: {{ transactions|length }}</span>
+    </div>
+    <hr class="text-muted">
+
+    <!-- Search input -->
+    <div class="mb-3 input-group">
+        <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control table-search" data-target="ledger-table" placeholder="Search global ledger by description, type, amounts...">
+    </div>
+
+    {% if transactions %}
+    <div class="table-responsive">
+        <table class="table align-middle custom-table mb-0" id="ledger-table">
+            <thead>
+                <tr>
+                    <th>Ledger ID</th>
+                    <th>Transaction Type</th>
+                    <th>Source Account</th>
+                    <th>Destination Account</th>
+                    <th>Amount Settled</th>
+                    <th>Details / Description</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td>#{{ tx.id }}</td>
+                    <td>
+                        <span class="badge {% if tx.transaction_type == 'DEPOSIT' %}bg-success-subtle text-success{% elif tx.transaction_type == 'WITHDRAW' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %} badge-premium">
+                            {{ tx.transaction_type }}
+                        </span>
+                    </td>
+                    <td class="small fw-semibold">
+                        {% if tx.source_account_number %}
+                            {{ tx.source_account_number }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="small fw-semibold">
+                        {% if tx.destination_account_number %}
+                            {{ tx.destination_account_number }}
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold {% if tx.transaction_type == 'WITHDRAW' %}text-danger{% elif tx.transaction_type == 'DEPOSIT' %}text-success{% else %}text-primary{% endif %}">
+                        {% if tx.transaction_type == 'WITHDRAW' %}-{% elif tx.transaction_type == 'DEPOSIT' %}+{% endif %}${{ "%.2f"|format(tx.amount) }}
+                    </td>
+                    <td class="small text-muted">{{ tx.description or "No description" }}</td>
+                    <td class="small text-muted">{{ tx.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-journal-text fs-1 d-block mb-3"></i>
+        <p>No transaction log entries found in the system.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

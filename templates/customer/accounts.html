@@ -1,0 +1,94 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Accounts - Antigravity Bank{% endblock %}
+{% block header_title %}My Accounts{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Accounts list -->
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-wallet2 text-primary me-2"></i>Active Bank Accounts</h5>
+                <span class="text-muted small">Total combined accounts: {{ accounts|length }}</span>
+            </div>
+            <hr class="text-muted">
+
+            {% if accounts %}
+            <div class="row g-3">
+                {% for acc in accounts %}
+                <div class="col-md-6">
+                    <div class="card bank-card p-3 {% if acc.status == 'FROZEN' %}warning{% elif acc.status == 'CLOSED' %}danger{% else %}dark{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-uppercase small text-white-50">{{ acc.account_type }} ACCOUNT</h6>
+                                <span class="badge {% if acc.status == 'ACTIVE' %}bg-success{% elif acc.status == 'FROZEN' %}bg-warning text-dark{% else %}bg-danger{% endif %} badge-premium small">
+                                    {{ acc.status }}
+                                </span>
+                            </div>
+                            <span class="fs-4"><i class="bi bi-shield-check {% if acc.status == 'ACTIVE' %}text-success{% else %}text-muted{% endif %}"></i></span>
+                        </div>
+                        
+                        <div class="my-3">
+                            <span class="text-white-50 small d-block">Account Balance</span>
+                            <span class="fs-3 fw-bold">${{ "%.2f"|format(acc.balance) }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                            <small class="text-white-50">No. {{ acc.account_number }}</small>
+                            <a href="/transactions?account_id={{ acc.id }}" class="btn btn-sm btn-light rounded-pill px-3 py-1 fw-semibold text-dark">
+                                Transact
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-wallet2 fs-1 text-muted d-block mb-3"></i>
+                <p class="text-muted">You do not have any active bank accounts with us.</p>
+                {% if user.kyc_status == 'APPROVED' %}
+                <p class="small text-muted">Create an account on the right to start banking immediately.</p>
+                {% else %}
+                <p class="text-danger small"><i class="bi bi-exclamation-triangle"></i> You must complete KYC verification before you can open a banking account.</p>
+                <a href="/kyc" class="btn btn-primary-grad px-4 rounded-pill">Complete KYC</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Create new account panel -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Open New Account</h5>
+            <hr class="text-muted">
+
+            {% if user.kyc_status == 'APPROVED' %}
+            <form action="/accounts/create" method="POST" class="needs-validation" novalidate>
+                <div class="mb-4">
+                    <label for="account_type" class="form-label fw-semibold">Account Type</label>
+                    <select class="form-select" id="account_type" name="account_type" required>
+                        <option value="" disabled selected>Select an option</option>
+                        <option value="SAVINGS">Savings Account (Interest yielding)</option>
+                        <option value="CURRENT">Current Account (Business transactions)</option>
+                    </select>
+                    <div class="invalid-feedback">Please choose an account type.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary-grad w-100 py-2.5">
+                    Open Account
+                </button>
+            </form>
+            {% else %}
+            <div class="alert alert-warning border-0" role="alert">
+                <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-1"></i> Opening Restricted</h6>
+                <p class="small mb-2">To prevent financial fraud, bank accounts can only be opened when your KYC registration is verified and approved.</p>
+                <a href="/kyc" class="btn btn-sm btn-outline-warning w-100 fw-bold">Check KYC Status</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

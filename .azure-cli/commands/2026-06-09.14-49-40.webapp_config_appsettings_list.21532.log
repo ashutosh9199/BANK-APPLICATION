@@ -1,0 +1,3 @@
+CMD-LOG-LINE-BEGIN 21532 | 2026-06-09 14:49:40,393 | INFO | az_command_data_logger | command args: webapp config appsettings list --name {} --resource-group {} --query {} -o {}
+CMD-LOG-LINE-BEGIN 21532 | 2026-06-09 14:49:41,460 | ERROR | az_command_data_logger | Please run 'az login' to setup account.
+CMD-LOG-LINE-BEGIN 21532 | 2026-06-09 14:49:41,460 | INFO | az_command_data_logger | exit code: 1

@@ -1,0 +1,289 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Loans - Antigravity Bank{% endblock %}
+{% block header_title %}Loans Management{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Apply / List Loans -->
+    <div class="col-lg-4">
+        <!-- Live Loan Calculator & Apply Form -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-calculator text-primary me-2"></i>Apply & Calculate Loan</h5>
+            <hr class="text-muted">
+
+            {% if user.kyc_status == 'APPROVED' %}
+            <form action="/loans/apply" method="POST" id="loanCalcForm" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="loan_type" class="form-label fw-semibold">Loan Category</label>
+                    <select class="form-select" id="loan_type" name="loan_type" required>
+                        <option value="" disabled selected>Select category</option>
+                        <option value="PERSONAL" data-rate="12.00">Personal Loan (12.0% Interest)</option>
+                        <option value="HOME" data-rate="8.50">Home Loan (8.5% Interest)</option>
+                        <option value="VEHICLE" data-rate="9.50">Vehicle Loan (9.5% Interest)</option>
+                        <option value="EDUCATION" data-rate="7.00">Education Loan (7.0% Interest)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="principal_amount" class="form-label fw-semibold">Principal Amount ($)</label>
+                    <input type="number" class="form-control" id="principal_amount" name="principal_amount" placeholder="e.g. 5000" min="500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="tenure_months" class="form-label fw-semibold">Tenure (Months)</label>
+                    <input type="number" class="form-control" id="tenure_months" name="tenure_months" placeholder="e.g. 12" min="3" max="360" required>
+                </div>
+
+                <!-- Interactive live calculation indicator -->
+                <div class="card bg-light border-0 p-3 mb-4 rounded-3 text-center">
+                    <span class="text-muted small d-block mb-1 text-uppercase fw-semibold">Estimated Monthly EMI</span>
+                    <h3 class="fw-bold text-primary mb-0" id="estimated_emi">$0.00</h3>
+                </div>
+
+                <button type="submit" class="btn btn-primary-grad w-100 py-2.5">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Submit Application
+                </button>
+            </form>
+            {% else %}
+            <div class="alert alert-warning border-0 mb-0" role="alert">
+                <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-octagon-fill me-1"></i> Loan Access Restricted</h6>
+                <p class="small mb-0">Loan portfolios are restricted to customers with validated and APPROVED identity profiles. Complete your KYC verification to unlock credit access.</p>
+                <a href="/kyc" class="btn btn-sm btn-outline-warning w-100 mt-2 fw-bold">KYC Status Check</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- My Loans List -->
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-bank text-primary me-2"></i>My Loan Portfolio</h5>
+            <hr class="text-muted">
+
+            {% if loans %}
+            <div class="list-group list-group-flush">
+                {% for ln in loans %}
+                <a href="/loans?loan_id={{ ln.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center px-0 py-3 {% if selected_loan and selected_loan.id == ln.id %}active-bg{% endif %}">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ ln.loan_type }} Loan</h6>
+                        <small class="text-muted">Debt: ${{ "%.2f"|format(ln.outstanding_balance) }}</small>
+                        <span class="badge {% if ln.status == 'ACTIVE' %}bg-success{% elif ln.status == 'COMPLETED' %}bg-secondary{% elif ln.status == 'PENDING' %}bg-warning text-dark{% else %}bg-danger{% endif %} badge-premium ms-2 small">
+                            {{ ln.status }}
+                        </span>
+                    </div>
+                    <span class="text-muted"><i class="bi bi-chevron-right"></i></span>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-3">No loan records on file.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Loan details and repayment schedules -->
+    <div class="col-lg-8">
+        {% if selected_loan %}
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h4 class="fw-bold m-0"><i class="bi bi-file-earmark-text text-primary me-2"></i>{{ selected_loan.loan_type }} Loan</h4>
+                    <small class="text-muted">Outstanding balance details</small>
+                </div>
+                <span class="badge fs-6 px-3 py-1.5 {% if selected_loan.status == 'ACTIVE' %}bg-success{% elif selected_loan.status == 'PENDING' %}bg-warning text-dark{% else %}bg-secondary{% endif %} rounded-pill">
+                    {{ selected_loan.status }}
+                </span>
+            </div>
+            <hr class="text-muted">
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <span class="text-muted small d-block">Principal Amount</span>
+                    <strong class="fs-5">${{ "%.2f"|format(selected_loan.principal_amount) }}</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted small d-block">Interest Rate</span>
+                    <strong class="fs-5">{{ selected_loan.interest_rate }}% Annual</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted small d-block">Tenure</span>
+                    <strong class="fs-5">{{ selected_loan.tenure_months }} Months</strong>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted small d-block">Outstanding Balance</span>
+                    <strong class="fs-5 text-danger">${{ "%.2f"|format(selected_loan.outstanding_balance) }}</strong>
+                </div>
+            </div>
+
+            <!-- Repayment/Upload action rows -->
+            {% if selected_loan.status == 'ACTIVE' %}
+            <div class="row g-3 pt-3 border-top">
+                <!-- Repayment Form -->
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-wallet2 text-primary me-1"></i>Pay EMI/Repay Loan</h6>
+                    <form action="/loans/{{ selected_loan.id }}/repay" method="POST" class="needs-validation" novalidate>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="amount" step="0.01" min="1" value="{{ selected_loan.emi_amount }}" required>
+                            <button type="submit" class="btn btn-accent-grad">Pay Now</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% elif selected_loan.status == 'PENDING' %}
+            <div class="row g-3 pt-3 border-top">
+                <!-- Upload Support Doc -->
+                <div class="col-md-7">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-cloud-arrow-up text-primary me-1"></i>Upload Supporting Document</h6>
+                    <form action="/loans/{{ selected_loan.id }}/upload-doc" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control form-control-sm" name="document_name" placeholder="Salary Slip, Tax Return..." required>
+                            <input type="file" class="form-control form-control-sm" name="file" accept=".pdf,.png,.jpg,.jpeg" required>
+                            <button type="submit" class="btn btn-sm btn-primary-grad">Upload</button>
+                        </div>
+                        <small class="text-muted d-block">Allowed formats: PDF, PNG, JPG, JPEG</small>
+                    </form>
+                </div>
+                
+                <!-- Attached Docs -->
+                <div class="col-md-5">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-files text-primary me-1"></i>Attached Attachments</h6>
+                    {% if selected_loan.documents %}
+                        <ul class="list-group list-group-flush small">
+                            {% for d in selected_loan.documents %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 bg-transparent">
+                                <span><i class="bi bi-file-earmark-check me-1"></i>{{ d.document_name }}</span>
+                                <a href="{{ d.document_url }}" target="_blank" class="btn btn-sm btn-link p-0 text-decoration-none">View</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <small class="text-muted">No attachments loaded yet.</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- EMI Amortization Schedule -->
+        {% if selected_loan.emi_schedule %}
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-calendar3 text-primary me-2"></i>EMI Amortization Schedule</h5>
+            <hr class="text-muted">
+
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table align-middle custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Due Date</th>
+                            <th>EMI Amount</th>
+                            <th>Principal Component</th>
+                            <th>Interest Component</th>
+                            <th>Outstanding Principal</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emi in selected_loan.emi_schedule|sort(attribute='installment_number') %}
+                        <tr>
+                            <td>{{ emi.installment_number }}</td>
+                            <td class="small text-muted">{{ emi.due_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="fw-bold">${{ "%.2f"|format(emi.emi_amount) }}</td>
+                            <td>${{ "%.2f"|format(emi.principal_component) }}</td>
+                            <td>${{ "%.2f"|format(emi.interest_component) }}</td>
+                            <td>${{ "%.2f"|format(emi.outstanding_principal) }}</td>
+                            <td>
+                                <span class="badge badge-premium {% if emi.status == 'PAID' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ emi.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Repayments Ledger -->
+        {% if selected_loan.repayments %}
+        <div class="card border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i>Repayment History</h5>
+            <hr class="text-muted">
+
+            <div class="table-responsive">
+                <table class="table align-middle custom-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Repayment Date</th>
+                            <th>Payment Method</th>
+                            <th>Amount Settled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rep in selected_loan.repayments %}
+                        <tr>
+                            <td class="small text-muted">{{ rep.payment_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="fw-semibold">{{ rep.payment_method }}</td>
+                            <td class="fw-bold text-success">${{ "%.2f"|format(rep.amount_paid) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center text-muted">
+            <i class="bi bi-bank fs-1 d-block mb-3"></i>
+            <h5>Select a loan or apply for a new one on the left.</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dynamic Loan calculations in JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loanTypeSelect = document.getElementById('loan_type');
+    const principalInput = document.getElementById('principal_amount');
+    const tenureInput = document.getElementById('tenure_months');
+    const estimatedEmiText = document.getElementById('estimated_emi');
+
+    function calculateEstimatedEMI() {
+        const principal = parseFloat(principalInput.value);
+        const tenure = parseInt(tenureInput.value);
+        const selectedOption = loanTypeSelect.options[loanTypeSelect.selectedIndex];
+        
+        if (!principal || !tenure || !selectedOption || selectedOption.value === "") {
+            estimatedEmiText.textContent = "$0.00";
+            return;
+        }
+
+        const rateVal = parseFloat(selectedOption.getAttribute('data-rate'));
+        if (rateVal === 0) {
+            const emi = principal / tenure;
+            estimatedEmiText.textContent = "$" + emi.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            return;
+        }
+
+        // EMI = P * r * (1 + r)^n / ((1 + r)^n - 1)
+        const r = (rateVal / 12) / 100;
+        const n = tenure;
+        const rPow = Math.pow((1 + r), n);
+        const emi = principal * r * rPow / (rPow - 1);
+        
+        if (isFinite(emi)) {
+            estimatedEmiText.textContent = "$" + emi.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        } else {
+            estimatedEmiText.textContent = "$0.00";
+        }
+    }
+
+    if (loanTypeSelect) {
+        loanTypeSelect.addEventListener('change', calculateEstimatedEMI);
+        principalInput.addEventListener('input', calculateEstimatedEMI);
+        tenureInput.addEventListener('input', calculateEstimatedEMI);
+    }
+});
+</script>
+{% endblock %}
